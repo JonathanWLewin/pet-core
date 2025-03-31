@@ -3,7 +3,8 @@ import { Button, View, StyleSheet } from "react-native";
 
 import { Amplify } from "aws-amplify";
 import { Authenticator, useAuthenticator } from "@aws-amplify/ui-react-native";
-import TodoList from "./src/TodoList";
+// import TodoList from "./src/TodoList";
+import ImagePickerExample from "./src/Storage";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import outputs from "./amplify_outputs.json";
@@ -26,7 +27,7 @@ const App = () => {
       <Authenticator>
         <SafeAreaView style={styles.container}>
           <SignOutButton />
-          <TodoList />
+          <ImagePickerExample />
         </SafeAreaView>
       </Authenticator>
     </Authenticator.Provider>
