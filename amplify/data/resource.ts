@@ -11,6 +11,7 @@ const schema = a.schema({
       medication: a.string().array(),
       notes: a.string().array(),
       weight: a.integer(),
+      uri: a.string()
     })
     .authorization(allow => [allow.owner()])
 });

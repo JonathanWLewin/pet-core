@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, TextInput, View, Button } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
-import { generateClient } from 'aws-amplify/api';
-import { type Schema } from '../amplify/data/resource';
+import { generateClient } from 'aws-amplify/data';
+import { type Schema } from '../amplify/data/resource'
 
 type Gender = 'male' | 'female';
 
@@ -23,8 +23,9 @@ export default function Modal() {
         sex,
         currentConditions,
         weight
+    }).then((response) => {
+        console.log("Pet created:", JSON.stringify(response));
     });
-    console.log({ name, breed, sex, currentConditions, weight });
   };
 
   return (
@@ -109,7 +110,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   picker: {
-    height: 50,
+    height: 55,
     width: '100%',
   },
 });
