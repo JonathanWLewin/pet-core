@@ -10,3 +10,7 @@ export type Pet = {
   uri: string;
   id: string;
 };
+
+export type ExtendedPet = Pet & {
+  downloadUrl: string | undefined;
+};

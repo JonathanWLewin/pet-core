@@ -5,6 +5,9 @@ import { usePetStore } from './index';
 import { generateClient } from 'aws-amplify/data';
 import { type Schema } from '../../amplify/data/resource'
 import { Pet } from '../../constants/types';
+import * as ImagePicker from 'expo-image-picker';
+import { uploadData, getUrl } from 'aws-amplify/storage';
+import { Image } from 'expo-image';
 
 const client = generateClient<Schema>();
 
@@ -16,6 +19,8 @@ export default function Tab() {
     const [sex, setSex] = useState(pets[0]?.sex);
     const [currentConditions, setCurrentConditions] = useState(pets[0]?.currentConditions);
     const [weight, setWeight] = useState(pets[0]?.weight);
+    const [image, setImage] = useState<string | undefined>(undefined);
+    const [displayDownloadedImage, setDisplayDownloadedImage] = useState<string | undefined>(pets[0]?.downloadUrl);
 
     const handlePetChange = (itemValue: string, itemIndex: number) => {
         const newPet = pets[itemIndex];
@@ -39,27 +44,87 @@ export default function Tab() {
                 currentConditions !== petToUpdate.currentConditions ||
                 weight !== petToUpdate.weight
             ));
+        if (image) {
+            try {
+                console.log("Uploading image...");
+                await uploadImage();
+                console.log("Uploading image finished");
+            } catch (error) {
+                console.error("Error uploading image:", error);
+            }
+        }
         if (
             petToUpdate && (
                 name !== petToUpdate.name ||
                 breed !== petToUpdate.breed ||
                 sex !== petToUpdate.sex ||
                 currentConditions !== petToUpdate.currentConditions ||
-                weight !== petToUpdate.weight
+                weight !== petToUpdate.weight ||
+                image !== petToUpdate.uri
             )) {
-                const petWithUpdates = {
-                    ...petToUpdate,
-                    name,
-                    breed,
-                    sex,
-                    currentConditions,
-                    weight,
-                };
+            let petWithUpdates = {
+                id: petToUpdate.id,
+                name: petToUpdate.name,
+                sex: petToUpdate.sex,
+                breed: petToUpdate.breed,
+                currentConditions: petToUpdate.currentConditions,
+                weight: petToUpdate.weight,
+                uri: petToUpdate.uri,
+            };
+            petWithUpdates = {
+                ...petWithUpdates,
+                name,
+                breed,
+                sex,
+                currentConditions,
+                weight,
+                uri: image ? image.split('/').pop() as string : petToUpdate.uri,
+            };
+            try {
                 console.log("Pet to update:", JSON.stringify(petWithUpdates));
-                const {data: updatedPet, errors } = await client.models.Pet.update(petWithUpdates);
+                const { data: updatedPet, errors } = await client.models.Pet.update(petWithUpdates);
                 console.log("Updated pet:", JSON.stringify(updatedPet));
                 console.log("Errors:", JSON.stringify(errors));
+            } catch (error) {
+                console.error("Error updating pet:", error);
+            }
         }
+    };
+
+    const pickImage = async () => {
+        // No permissions request is necessary for launching the image library
+        let result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ['images', 'videos'],
+            allowsEditing: true,
+            aspect: [4, 3],
+            quality: 1,
+        });
+
+        if (!result.canceled) {
+            setImage(result.assets[0].uri);
+        }
+    };
+
+    const uploadImage = async () => {
+        if (!image) {
+            return;
+        }
+        await fetchImageFromUri(image).then((blob) => {
+            uploadData({
+                path: 'profile-pictures/' + image.split('/').pop(),
+                data: blob,
+                options: {
+                    contentType: 'image/jpeg',
+                }
+            })
+            console.log('Image uploaded');
+        });
+      }
+
+    const fetchImageFromUri = async (uri: string) => {
+        const response = await fetch(uri);
+        const blob = await response.blob();
+        return blob;
     };
 
     return (
@@ -123,6 +188,10 @@ export default function Tab() {
                         keyboardType="numeric"
                     />
 
+                    <Button title="Pick an image from camera roll" onPress={pickImage} />
+                    {!image && displayDownloadedImage && <Image source={displayDownloadedImage} style={styles.image} placeholder={'test'} />}
+                    {image && <Image source={{ uri: image }} style={styles.image} />}
+
                     <Button title="Submit" onPress={handleSubmit} />
                 </>
             )}
@@ -162,5 +231,9 @@ const styles = StyleSheet.create({
     picker: {
         height: 55,
         width: '100%',
+    },
+    image: {
+        width: 200,
+        height: 200,
     },
 });
