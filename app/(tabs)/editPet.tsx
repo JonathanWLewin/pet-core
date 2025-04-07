@@ -30,6 +30,7 @@ export default function Tab() {
         setSex(newPet.sex);
         setCurrentConditions(newPet.currentConditions);
         setWeight(newPet.weight);
+        setDisplayDownloadedImage(newPet.downloadUrl);
     };
 
     const handleSubmit = async () => {
